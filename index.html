@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dobby Finance Assistant</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="apple-touch-icon" href="assets/favicon.png">
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <header class="header">
+        <div class="logo-container">
+            <img src="assets/logo-dobby.png" alt="Dobby Finance Assistant" class="header-logo">
+            <span>Dobby Finance Assistant</span>
+        </div>
+        <button id="addExpenseBtn" class="add-btn">+ Add Expense</button>
+    </header>
+
+    <main class="main-content">
+        <section class="filter-section">
+            <div class="filter-group">
+                <label for="timeFilter">Time Filter:</label>
+                <select id="timeFilter">
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="categoryFilter">Category Filter:</label>
+                <select id="categoryFilter">
+                    <option value="all">All Categories</option>
+                    <option value="Food & Beverage">Food & Beverage</option>
+                    <option value="Transportation">Transportation</option>
+                    <option value="Rentals">Rentals</option>
+                    <option value="Bills">Bills</option>
+                    <option value="Education">Education</option>
+                    <option value="Insurances">Insurances</option>
+                    <option value="Pets">Pets</option>
+                    <option value="Home Services">Home Services</option>
+                    <option value="Fitness">Fitness</option>
+                    <option value="Makeup">Makeup</option>
+                    <option value="Gifts & Donations">Gifts & Donations</option>
+                    <option value="Investment">Investment</option>
+                    <option value="Others">Others</option>
+                </select>
+            </div>
+        </section>
+
+        <section class="summary-section">
+            <div class="summary-card">
+                <h3>Total Expenses</h3>
+                <div id="totalAmount" class="amount">$0.00</div>
+            </div>
+        </section>
+
+        <section class="expenses-section">
+            <h2>Expenses History</h2>
+            <div id="expensesList" class="expenses-list">
+                <p class="no-expenses">No expenses recorded yet. Click "Add Expense" to get started!</p>
+            </div>
+        </section>
+    </main>
+
+    <div id="expensePopup" class="popup-overlay">
+        <div class="popup">
+            <div class="popup-header">
+                <h2>Add New Expense</h2>
+                <button id="closePopup" class="close-btn">×</button>
+            </div>
+            <div class="popup-content">
+                <form id="expenseForm">
+                    <div class="form-group">
+                        <label for="expenseDate">Date:</label>
+                        <input type="date" id="expenseDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseTime">Time:</label>
+                        <input type="time" id="expenseTime" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseAmount">Amount (USD):</label>
+                        <input type="number" id="expenseAmount" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseCategory">Category:</label>
+                        <select id="expenseCategory" required>
+                            <option value="">Select Category</option>
+                            <option value="Food & Beverage">Food & Beverage</option>
+                            <option value="Transportation">Transportation</option>
+                            <option value="Rentals">Rentals</option>
+                            <option value="Bills">Bills</option>
+                            <option value="Education">Education</option>
+                            <option value="Insurances">Insurances</option>
+                            <option value="Pets">Pets</option>
+                            <option value="Home Services">Home Services</option>
+                            <option value="Fitness">Fitness</option>
+                            <option value="Makeup">Makeup</option>
+                            <option value="Gifts & Donations">Gifts & Donations</option>
+                            <option value="Investment">Investment</option>
+                            <option value="Others">Others</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseNote">Note:</label>
+                        <textarea id="expenseNote" rows="3" placeholder="Add a note (optional)"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" id="dontSaveBtn" class="btn btn-secondary">Don't Save</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="doneNotification" class="done-notification">
+        <img src="assets/done.png" alt="Done" class="done-icon">
+        <span>Done!</span>
+    </div>
+
+    <script src="index.js"></script>
+</body>
+
+</html>
