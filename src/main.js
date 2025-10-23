@@ -14,6 +14,11 @@ class ExpenseManager {
             this.showPopup()
         })
 
+        // API Settings button
+        document.getElementById('apiSettingsBtn').addEventListener('click', () => {
+            window.location.href = 'src/api-settings/api-settings.html'
+        })
+
         // Close popup buttons
         document.getElementById('closePopup').addEventListener('click', () => {
             this.hidePopup()
@@ -52,11 +57,11 @@ class ExpenseManager {
         const now = new Date()
         const dateInput = document.getElementById('expenseDate')
         const timeInput = document.getElementById('expenseTime')
-        
+
         // Set current date
         const dateString = now.toISOString().split('T')[0]
         dateInput.value = dateString
-        
+
         // Set current time
         const timeString = now.toTimeString().split(' ')[0].substring(0, 5)
         timeInput.value = timeString
@@ -119,10 +124,10 @@ class ExpenseManager {
 
     getFilteredExpenses() {
         let filtered = [...this.expenses]
-        
+
         const timeFilter = document.getElementById('timeFilter').value
         const now = new Date()
-        
+
         if (timeFilter === 'today') {
             const today = now.toISOString().split('T')[0]
             filtered = filtered.filter(expense => expense.date === today)
@@ -130,14 +135,14 @@ class ExpenseManager {
             const startOfWeek = new Date(now)
             startOfWeek.setDate(now.getDate() - now.getDay() + 1)
             startOfWeek.setHours(0, 0, 0, 0)
-            
+
             filtered = filtered.filter(expense => {
                 const expenseDate = new Date(expense.date)
                 return expenseDate >= startOfWeek && expenseDate <= now
             })
         } else if (timeFilter === 'month') {
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-            
+
             filtered = filtered.filter(expense => {
                 const expenseDate = new Date(expense.date)
                 return expenseDate >= startOfMonth && expenseDate <= now
@@ -187,10 +192,10 @@ class ExpenseManager {
             const amount = parseFloat(expense.amount) || 0
             return sum + amount
         }, 0)
-        
+
         const totalElement = document.getElementById('totalAmount')
         totalElement.textContent = `$${total.toFixed(2)}`
-        
+
         totalElement.style.transform = 'scale(1.05)'
         setTimeout(() => {
             totalElement.style.transform = 'scale(1)'
@@ -209,7 +214,7 @@ class ExpenseManager {
     showDoneNotification() {
         const notification = document.getElementById('doneNotification')
         notification.classList.add('show')
-        
+
         setTimeout(() => {
             notification.classList.remove('show')
         }, 2000)

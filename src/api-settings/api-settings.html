@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Settings - Dobby Finance Assistant</title>
+    <link rel="icon" type="image/png" href="../../assets/favicon.png">
+    <link rel="apple-touch-icon" href="../../assets/favicon.png">
+    <link rel="stylesheet" href="api-settings.css">
+</head>
+
+<body>
+    <header class="header">
+        <div class="logo-container">
+            <img src="../../assets/logo-dobby.png" alt="Dobby Finance Assistant" class="header-logo">
+            <span>API Settings</span>
+        </div>
+        <button id="backBtn" class="back-btn">← Back to Home</button>
+    </header>
+
+    <main class="main-content">
+        <section class="api-section">
+            <div class="api-card">
+                <h2>Fireworks API Key Management</h2>
+                <p class="description">Configure your Fireworks API key to enable advanced features in Dobby Finance Assistant.</p>
+                
+                <form id="apiForm" class="api-form">
+                    <div class="form-group">
+                        <label for="apiKey">Fireworks API Key:</label>
+                        <input type="password" id="apiKey" placeholder="Enter your Fireworks API key" required>
+                        <div class="input-actions">
+                            <button type="button" id="toggleVisibility" class="toggle-btn">👁️ Show</button>
+                            <button type="button" id="clearKey" class="clear-btn">🗑️ Clear</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="apiStatus">Status:</label>
+                        <div id="apiStatus" class="status-indicator">
+                            <span class="status-dot"></span>
+                            <span class="status-text">No API key configured</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" id="testConnection" class="btn btn-secondary">Test Connection</button>
+                        <button type="submit" class="btn btn-primary">Save API Key</button>
+                    </div>
+                </form>
+                
+                <div class="help-section">
+                    <h3>How to get your Fireworks API Key:</h3>
+                    <ol>
+                        <li>Visit <a href="https://fireworks.ai" target="_blank">fireworks.ai</a></li>
+                        <li>Sign up or log in to your account</li>
+                        <li>Navigate to the API section in your dashboard</li>
+                        <li>Generate a new API key</li>
+                        <li>Copy and paste the key above</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="successNotification" class="success-notification">
+        <div class="notification-content">
+            <span class="notification-icon">✅</span>
+            <span class="notification-text">API key saved successfully!</span>
+        </div>
+    </div>
+
+    <div id="errorNotification" class="error-notification">
+        <div class="notification-content">
+            <span class="notification-icon">❌</span>
+            <span class="notification-text">Failed to save API key. Please try again.</span>
+        </div>
+    </div>
+
+    <script src="api-settings.js"></script>
+</body>
+
+</html>

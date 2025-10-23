@@ -7,7 +7,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: url('assets/logo.png') no-repeat center center fixed;
+    background: url('../assets/logo.png') no-repeat center center fixed;
     background-size: 60%;
     min-height: 100vh;
     color: #333;
@@ -57,6 +57,30 @@ body::before {
 
 .header-logo:hover {
     transform: scale(1.05);
+}
+
+.header-buttons {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.api-btn {
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(74, 85, 104, 0.5);
+}
+
+.api-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(74, 85, 104, 0.7);
 }
 
 .add-btn {
@@ -280,7 +304,7 @@ body::before {
     transform: translate(-50%, -50%);
     width: 300px;
     height: 300px;
-    background: url('assets/logo.png') no-repeat center;
+    background: url('../assets/logo.png') no-repeat center;
     background-size: contain;
     opacity: 0.4;
     z-index: 1;
@@ -482,4 +506,10 @@ body::before {
     .header-logo {
         height: 40px;
     }
+    
+    .header-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
 }
+
