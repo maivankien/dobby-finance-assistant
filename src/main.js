@@ -222,3 +222,4 @@ class ExpenseManager {
 }
 
 const expenseManager = new ExpenseManager()
+window.expenseManager = expenseManager
