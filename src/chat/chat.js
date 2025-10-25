@@ -422,7 +422,7 @@ class DobbyChat {
             ---
             ## Step 1. Identify user intent:
             One of:
-            - "expense_log": log new expense (e.g., "Bought lunch for 50k")
+            - "expense_log": log new expense (e.g., "Bought lunch for 5$")
             - "expense_summary": view total expenses by day/week/month
             - "expense_query_by_category": ask about expenses by category (e.g., "how much on food this month")
             - "greeting": greeting or small talk
@@ -433,9 +433,9 @@ class DobbyChat {
             - "category": map the described item to **one of these categories only**:
             ["Food & Beverage", "Transportation", "Rentals", "Bills", "Education", "Insurances", "Pets", "Home Services", "Fitness", "Makeup", "Gifts & Donations", "Investment", "Others"]
             → If unsure or not match, use "Others".
-            - "amount": numeric value in VND (convert "k" → 1000)
+            - "amount": numeric value in USD
             - "time_text": natural time phrase ("yesterday", "this morning", etc.)
-            - "time_resolved": specific time (ISO 8601, UTC+7)
+            - "time_resolved": specific time (ISO 8601, UTC+0)
             - "note": short note if present
         
             ## Step 3. If intent is **expense_summary**:
@@ -444,7 +444,13 @@ class DobbyChat {
             - "time_end": ISO end time
             - "category": if user asks about a specific one, match to category list above
         
-            ## Step 4. For all other intents, return null fields.
+            ## Step 4. Currency Rule
+            - Always treat all monetary values as **U.S. dollars ($)**.
+            - Do not localize or convert to other currencies (e.g., VND, EUR, JPY).
+            - If the user writes in another language, still assume and return values in **USD**.
+            - When returning JSON, **never include currency symbols** — only numeric value (e.g., 100.5)
+
+            ## Step 5. For all other intents, return null fields.
         
             ---
             ## Output format
@@ -463,17 +469,17 @@ class DobbyChat {
             ---
             ## Examples
         
-            - User: "Bought coffee for 45k this morning"
-            → { "intent": "expense_log", "category": "Food & Beverage", "amount": 45000, "time_text": "this morning", "time_resolved": "2025-10-24T08:00:00+07:00", "time_start": null, "time_end": null, "note": null }
+            - User: "Bought coffee for 2$ this morning"
+            → { "intent": "expense_log", "category": "Food & Beverage", "amount": 2, "time_text": "this morning", "time_resolved": "2025-10-24T08:00:00+00:00", "time_start": null, "time_end": null, "note": null }
         
             - User: "Paid electricity bill yesterday"
-            → { "intent": "expense_log", "category": "Bills", "amount": null, "time_text": "yesterday", "time_resolved": "2025-10-23T00:00:00+07:00", "time_start": null, "time_end": null, "note": null }
+            → { "intent": "expense_log", "category": "Bills", "amount": null, "time_text": "yesterday", "time_resolved": "2025-10-23T00:00:00+00:00", "time_start": null, "time_end": null, "note": null }
         
             - User: "How much did I spend on transportation last week?"
-            → { "intent": "expense_query_by_category", "category": "Transportation", "amount": null, "time_text": "last week", "time_resolved": null, "time_start": "2025-10-13T00:00:00+07:00", "time_end": "2025-10-19T23:59:59+07:00", "note": null }
+            → { "intent": "expense_query_by_category", "category": "Transportation", "amount": null, "time_text": "last week", "time_resolved": null, "time_start": "2025-10-13T00:00:00+00:00", "time_end": "2025-10-19T23:59:59+00:00", "note": null }
         
             - User: "Show me my total expenses this month"
-            → { "intent": "expense_summary", "category": null, "amount": null, "time_text": "this month", "time_resolved": null, "time_start": "2025-10-01T00:00:00+07:00", "time_end": "2025-10-31T23:59:59+07:00", "note": null }
+            → { "intent": "expense_summary", "category": null, "amount": null, "time_text": "this month", "time_resolved": null, "time_start": "2025-10-01T00:00:00+00:00", "time_end": "2025-10-31T23:59:59+00:00", "note": null }
         
             ---
             Remember: map category strictly to the provided list. No extra text, no explanation, only one JSON.`
