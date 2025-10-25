@@ -425,6 +425,7 @@ class DobbyChat {
             - "expense_log": log new expense (e.g., "Bought lunch for 5$")
             - "expense_summary": view total expenses by day/week/month
             - "expense_query_by_category": ask about expenses by category (e.g., "how much on food this month")
+            - "financial_advice": financial advice, spending analysis, budget management tips (e.g., "How can I save more?", "Is my spending reasonable?", "Analyze my expenses")
             - "greeting": greeting or small talk
             - "other": unrelated to finance
         
@@ -444,6 +445,13 @@ class DobbyChat {
             - "time_end": ISO end time
             - "category": if user asks about a specific one, match to category list above
         
+            ## Step 3.1. If intent is **financial_advice**, extract:
+            - "advice_type": "spending_analysis" (analyze current spending patterns) or "general_advice" (general financial advice)
+            - "time_text": time period for analysis (e.g. "this month", "last 3 months")
+            - "time_start": ISO start time for analysis
+            - "time_end": ISO end time for analysis
+            - "category": specific category to focus advice on (if mentioned)
+        
             ## Step 4. Currency Rule
             - Always treat all monetary values as **U.S. dollars ($)**.
             - Do not localize or convert to other currencies (e.g., VND, EUR, JPY).
@@ -456,14 +464,15 @@ class DobbyChat {
             ## Output format
             Always return exactly **one JSON object only**, nothing else:
             {
-            "intent": "expense_log" | "expense_summary" | "expense_query_by_category" | "greeting" | "other",
+            "intent": "expense_log" | "expense_summary" | "expense_query_by_category" | "financial_advice" | "greeting" | "other",
             "category": string | null,
             "amount": number | null,
             "time_text": string | null,
             "time_resolved": string | null,
             "time_start": string | null,
             "time_end": string | null,
-            "note": string | null
+            "note": string | null,
+            "advice_type": string | null
             }
         
             ---
@@ -479,10 +488,158 @@ class DobbyChat {
             → { "intent": "expense_query_by_category", "category": "Transportation", "amount": null, "time_text": "last week", "time_resolved": null, "time_start": "2025-10-13T00:00:00+00:00", "time_end": "2025-10-19T23:59:59+00:00", "note": null }
         
             - User: "Show me my total expenses this month"
-            → { "intent": "expense_summary", "category": null, "amount": null, "time_text": "this month", "time_resolved": null, "time_start": "2025-10-01T00:00:00+00:00", "time_end": "2025-10-31T23:59:59+00:00", "note": null }
+            → { "intent": "expense_summary", "category": null, "amount": null, "time_text": "this month", "time_resolved": null, "time_start": "2025-10-01T00:00:00+00:00", "time_end": "2025-10-31T23:59:59+00:00", "note": null, "advice_type": null }
+        
+            - User: "How can I save more money?"
+            → { "intent": "financial_advice", "category": null, "amount": null, "time_text": null, "time_resolved": null, "time_start": null, "time_end": null, "note": null, "advice_type": "general_advice" }
+        
+            - User: "Analyze my spending this month"
+            → { "intent": "financial_advice", "category": null, "amount": null, "time_text": "this month", "time_resolved": null, "time_start": "2025-10-01T00:00:00+00:00", "time_end": "2025-10-31T23:59:59+00:00", "note": null, "advice_type": "spending_analysis" }
         
             ---
             Remember: map category strictly to the provided list. No extra text, no explanation, only one JSON.`
+    }
+
+    getSystemPromptFinancialAdvisor() {
+        return `
+            You are Dobby, a professional financial advisor and personal finance expert.
+            Your role is to provide practical, actionable financial advice based on real spending data and general financial principles.
+        
+            ## Your Expertise:
+            - Personal budgeting and expense management
+            - Spending pattern analysis and optimization
+            - Savings strategies and financial goal setting
+            - Debt management and financial planning
+            - Investment basics and financial literacy
+        
+            ## When analyzing spending data:
+            1. **Identify patterns**: Look for trends, unusual spikes, or concerning patterns
+            2. **Compare to benchmarks**: Reference typical spending ratios (e.g., 50/30/20 rule)
+            3. **Spot opportunities**: Find areas where spending can be optimized
+            4. **Provide specific advice**: Give concrete, actionable recommendations
+            5. **Be encouraging**: Focus on positive changes and achievable goals
+        
+            ## Communication Style:
+            - Use friendly, conversational tone
+            - Avoid jargon - explain financial concepts simply
+            - Be specific with numbers and percentages when possible
+            - Provide step-by-step actionable advice
+            - Be encouraging and supportive
+            - Use examples and analogies when helpful
+        
+            ## Response Structure:
+            - Start with a brief summary of the situation
+            - Highlight key findings or concerns
+            - Provide 3-5 specific, actionable recommendations
+            - End with encouragement and next steps
+        
+            ## Important Guidelines:
+            - Always base advice on the actual spending data provided
+            - If no spending data is available, provide general financial advice
+            - Be realistic about what changes are achievable
+            - Focus on progress, not perfection
+            - Remember that small changes can have big impacts over time
+        
+            Provide practical, personalized financial advice that helps users improve their financial health.`
+    }
+
+    async getFinancialAdviceFromAI(analysisData, intentData) {
+        const spendingDataText = this.formatSpendingDataForAI(analysisData)
+
+        const prompt = this.createFinancialAdvicePrompt(spendingDataText, intentData)
+        const previousHistory = this.getPreviousChatHistory(this.MAX_PREVIOUS_MESSAGES)
+
+        const body = {
+            model: this.model,
+            messages: [
+                {
+                    role: "system",
+                    content: this.getSystemPromptFinancialAdvisor()
+                },
+                ...previousHistory,
+                {
+                    role: "user",
+                    content: prompt
+                }
+            ]
+        }
+
+        try {
+            const response = await fetch(this.apiUrl, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${this.apiKey}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(body)
+            })
+
+            if (!response.ok) {
+                const errorText = await response.text()
+                throw new Error(`HTTP error! ${response.status} - ${errorText}`)
+            }
+
+            const data = await response.json()
+            return data?.choices?.[0]?.message?.content?.trim() ||
+                "I'm sorry, I couldn't generate financial advice at the moment. Please try again."
+        } catch (err) {
+            console.error("Error getFinancialAdviceFromAI:", err)
+            return "I'm having trouble connecting to provide financial advice. Please check your internet connection and try again."
+        }
+    }
+
+    formatSpendingDataForAI(analysisData) {
+        if (!analysisData || !analysisData.hasData) {
+            return `
+## No Spending Data Available
+I don't have access to your spending data yet. I'll provide general financial advice based on best practices.
+`
+        }
+
+        const {
+            totalExpenses,
+            transactionCount,
+            averageDaily,
+            averageWeekly,
+            averageMonthly,
+            topCategories,
+            timeRange
+        } = analysisData
+
+        return `
+## Your Spending Analysis:
+- **Total Expenses**: $${totalExpenses.toLocaleString()} (${transactionCount} transactions)
+- **Average Daily**: $${averageDaily.toFixed(2)}
+- **Average Weekly**: $${averageWeekly.toFixed(2)}
+- **Average Monthly**: $${averageMonthly.toFixed(2)}
+
+### Top Spending Categories:
+${topCategories.map(cat =>
+            `- **${cat.category}**: $${cat.total.toLocaleString()} (${cat.percentage}% of total)`
+        ).join('\n')}
+
+### Time Period: ${timeRange.start ? new Date(timeRange.start).toLocaleDateString() : 'All time'} - ${timeRange.end ? new Date(timeRange.end).toLocaleDateString() : 'Present'}
+`
+    }
+
+    createFinancialAdvicePrompt(spendingDataText, intentData) {
+        const { advice_type, category, userQuestion } = intentData
+
+        const adviceTypeText = advice_type === 'spending_analysis'
+            ? 'Analyze my spending patterns and provide recommendations'
+            : 'General financial advice'
+
+        return `
+${spendingDataText}
+
+## User's Question:
+${userQuestion || "Please provide financial advice"}
+
+## Advice Type: ${adviceTypeText}
+
+${category ? `## Focus Area: ${category} spending` : ''}
+
+Please provide personalized financial advice based on the above information.`
     }
 
     async detectIntent(userInput) {
@@ -591,12 +748,140 @@ class DobbyChat {
         return `Expenses for "${category}": ${total.toLocaleString()}$ (${filteredExpenses.length} transactions)`
     }
 
+    analyzeExpenseData(timeStart = null, timeEnd = null) {
+        if (!window.expenseManager) {
+            return null
+        }
+
+        let expenses = this.getFilteredExpenses(timeStart, timeEnd)
+
+        if (expenses.length === 0) {
+            return this.createEmptyAnalysisData(timeStart, timeEnd)
+        }
+
+        const { totalExpenses, transactionCount } = this.calculateBasicStats(expenses)
+
+        const { categoryBreakdown, topCategories } = this.analyzeSpendingByCategory(expenses, totalExpenses)
+
+        const { averageDaily, averageWeekly, averageMonthly } = this.calculateTimeAverages(
+            totalExpenses, timeStart, timeEnd, expenses
+        )
+
+        return {
+            totalExpenses,
+            transactionCount,
+            categoryBreakdown,
+            topCategories,
+            averageDaily,
+            averageWeekly,
+            averageMonthly,
+            timeRange: { start: timeStart, end: timeEnd },
+            hasData: true
+        }
+    }
+
+    getFilteredExpenses(timeStart, timeEnd) {
+        let expenses = [...window.expenseManager.expenses]
+
+        if (timeStart && timeEnd) {
+            const startDate = new Date(timeStart)
+            const endDate = new Date(timeEnd)
+            expenses = expenses.filter(expense => {
+                const expenseDate = new Date(expense.date)
+                return expenseDate >= startDate && expenseDate <= endDate
+            })
+        }
+
+        return expenses
+    }
+
+    createEmptyAnalysisData(timeStart, timeEnd) {
+        return {
+            totalExpenses: 0,
+            transactionCount: 0,
+            categoryBreakdown: {},
+            topCategories: [],
+            averageDaily: 0,
+            averageWeekly: 0,
+            averageMonthly: 0,
+            timeRange: { start: timeStart, end: timeEnd },
+            hasData: false
+        }
+    }
+
+    calculateBasicStats(expenses) {
+        const totalExpenses = expenses.reduce((sum, expense) => sum + (parseFloat(expense.amount) || 0), 0)
+        const transactionCount = expenses.length
+        return { totalExpenses, transactionCount }
+    }
+
+    analyzeSpendingByCategory(expenses, totalExpenses) {
+        const categoryBreakdown = {}
+        expenses.forEach(expense => {
+            const { category, amount } = expense
+            if (!categoryBreakdown[category]) {
+                categoryBreakdown[category] = { total: 0, count: 0 }
+            }
+            categoryBreakdown[category].total += parseFloat(amount) || 0
+            categoryBreakdown[category].count += 1
+        })
+
+        const topCategories = Object.entries(categoryBreakdown)
+            .sort(([, a], [, b]) => b.total - a.total)
+            .slice(0, 3)
+            .map(([category, data]) => ({
+                category,
+                total: data.total,
+                count: data.count,
+                percentage: (data.total / totalExpenses * 100).toFixed(1)
+            }))
+
+        return { categoryBreakdown, topCategories }
+    }
+
+    calculateTimeAverages(totalExpenses, timeStart, timeEnd, expenses) {
+        const now = new Date()
+        const startDate = timeStart ? new Date(timeStart) : new Date(expenses[expenses.length - 1].date)
+        const endDate = timeEnd ? new Date(timeEnd) : now
+        const daysDiff = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)))
+        const weeksDiff = Math.max(1, daysDiff / 7)
+        const monthsDiff = Math.max(1, daysDiff / 30)
+
+        return {
+            averageDaily: totalExpenses / daysDiff,
+            averageWeekly: totalExpenses / weeksDiff,
+            averageMonthly: totalExpenses / monthsDiff
+        }
+    }
+
     async handleGreeting() {
         return "Hello! I'm Dobby, your financial assistant. I can help you record expenses, view statistics, and manage your budget. What do you need help with?"
     }
 
     async handleDefault() {
         return "I don't understand your request. You can ask me about expenses, financial statistics, or anything else you need help with?"
+    }
+
+    async handleFinancialAdvice(intentData) {
+        if (!window.expenseManager) {
+            return "I'd love to help with financial advice, but I need access to your expense data first. Please make sure the expense management system is available."
+        }
+
+        const { time_start, time_end } = intentData
+
+        const analysisData = this.analyzeExpenseData(time_start, time_end)
+
+        const enhancedIntentData = {
+            ...intentData,
+            userQuestion: this.getLastUserMessage()
+        }
+
+        return await this.getFinancialAdviceFromAI(analysisData, enhancedIntentData)
+    }
+
+    getLastUserMessage() {
+        const userMessages = this.chatHistory.filter(msg => msg.sender === 'user')
+        return userMessages.length > 0 ? userMessages[userMessages.length - 1].content : ""
     }
 
     async handleIntent(intentData) {
@@ -606,11 +891,12 @@ class DobbyChat {
             "expense_log": this.handleExpenseLog,
             "expense_summary": this.handleExpenseSummary,
             "expense_query_by_category": this.handleExpenseQueryByCategory,
+            "financial_advice": this.handleFinancialAdvice,
             "greeting": this.handleGreeting,
             "other": this.handleDefault
         }
 
-        return intentMap[intentType] ? await intentMap[intentType](intentData) : await this.handleGreeting()
+        return intentMap[intentType] ? await intentMap[intentType].call(this, intentData) : await this.handleGreeting()
     }
 
     async getAIResponse(message) {
