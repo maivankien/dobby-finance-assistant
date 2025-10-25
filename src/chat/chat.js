@@ -130,6 +130,10 @@ class DobbyChat {
         this.minimizeButton.textContent = '−'
         this.chatInput.focus()
         document.body.style.overflow = 'hidden'
+        
+        setTimeout(() => {
+            this.scrollToBottom()
+        }, 100)
     }
 
     toggleMinimize() {
@@ -907,7 +911,23 @@ Please provide personalized financial advice based on the above information.`
     }
 
     scrollToBottom() {
-        this.chatMessages.scrollTop = this.chatMessages.scrollHeight
+        if (this.chatMessages && !this.isMinimized) {
+            requestAnimationFrame(() => {
+                const lastMessage = this.chatMessages.lastElementChild
+                if (lastMessage) {
+                    lastMessage.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'end',
+                        inline: 'nearest'
+                    })
+                } else {
+                    this.chatMessages.scrollTo({
+                        top: this.chatMessages.scrollHeight,
+                        behavior: 'smooth'
+                    })
+                }
+            })
+        }
     }
 }
 
