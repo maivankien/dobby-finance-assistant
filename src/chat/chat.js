@@ -11,11 +11,11 @@ class DobbyChat {
         this.apiKey = localStorage.getItem('fireworks_api_key')
         this.apiUrl = "https://api.fireworks.ai/inference/v1/chat/completions"
         this.model = "accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new"
-        
+
         this.MAX_CHAT_HISTORY_LENGTH = 30
         this.MAX_PREVIOUS_MESSAGES = 5
         this.MAX_SAVE_HISTORY_LENGTH = 30
-        
+
         this.init()
     }
 
@@ -559,7 +559,7 @@ class DobbyChat {
     }
 
     async handleExpenseQueryByCategory(intentData) {
-        const { category } = intentData
+        const { category, time_start, time_end } = intentData
 
         if (!window.expenseManager) {
             return "Cannot connect to expense management system."
@@ -569,9 +569,18 @@ class DobbyChat {
             return "What category would you like to view expenses for?"
         }
 
-        const filteredExpenses = window.expenseManager.expenses.filter(expense =>
+        let filteredExpenses = [...window.expenseManager.expenses].filter(expense =>
             expense.category.toLowerCase().includes(category.toLowerCase())
         )
+
+        if (time_start && time_end) {
+            const startDate = new Date(time_start)
+            const endDate = new Date(time_end)
+            filteredExpenses = filteredExpenses.filter(expense => {
+                const expenseDate = new Date(expense.date)
+                return expenseDate >= startDate && expenseDate <= endDate
+            })
+        }
 
         const total = filteredExpenses.reduce((sum, expense) => sum + (parseFloat(expense.amount) || 0), 0)
 
