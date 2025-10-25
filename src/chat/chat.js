@@ -11,14 +11,19 @@ class DobbyChat {
         this.apiKey = localStorage.getItem('fireworks_api_key')
         this.apiUrl = "https://api.fireworks.ai/inference/v1/chat/completions"
         this.model = "accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new"
+        
+        this.MAX_CHAT_HISTORY_LENGTH = 30
+        this.MAX_PREVIOUS_MESSAGES = 5
+        this.MAX_SAVE_HISTORY_LENGTH = 30
+        
         this.init()
     }
 
     init() {
         this.createChatContainer()
         this.bindEvents()
-        this.loadChatHistoryFromStorage()
         this.setupInitialState()
+        this.loadChatHistoryFromStorage()
     }
 
     createChatContainer() {
@@ -31,25 +36,13 @@ class DobbyChat {
                                 <img src="assets/logo-dobby.png" alt="Dobby" class="chat-logo">
                                 <span>Dobby AI Assistant</span>
                             </div>
-                            <button id="minimizeChat" class="minimize-btn">−</button>
+                            <div class="chat-header-buttons">
+                                <button id="clearChatHistory" class="clear-btn" title="Clear chat history">🗑️</button>
+                                <button id="minimizeChat" class="minimize-btn">−</button>
+                            </div>
                         </div>
                         
                         <div class="chat-messages" id="chatMessages">
-                            <div class="message bot-message">
-                                <div class="message-avatar">
-                                    <img src="assets/logo-dobby.png" alt="Dobby">
-                                </div>
-                                <div class="message-content">
-                                    <p>Hello! I'm Dobby, your financial assistant. I can help you with:</p>
-                                    <ul>
-                                        <li>Expense analysis</li>
-                                        <li>Financial advice</li>
-                                        <li>Expense explanations</li>
-                                        <li>Budget management support</li>
-                                    </ul>
-                                    <p>Do you have any questions?</p>
-                                </div>
-                            </div>
                         </div>
                         
                         <div class="chat-input-container">
@@ -65,11 +58,13 @@ class DobbyChat {
             document.body.insertAdjacentHTML('beforeend', chatHTML)
         }
 
+        // Always assign elements after HTML is created
         this.chatContainer = document.getElementById('dobbyChatContainer')
         this.chatMessages = document.getElementById('chatMessages')
         this.chatInput = document.getElementById('chatInput')
         this.sendButton = document.getElementById('sendMessage')
         this.minimizeButton = document.getElementById('minimizeChat')
+        this.clearButton = document.getElementById('clearChatHistory')
     }
 
     bindEvents() {
@@ -84,6 +79,11 @@ class DobbyChat {
         this.minimizeButton.addEventListener('click', (e) => {
             e.stopPropagation()
             this.toggleMinimize()
+        })
+
+        this.clearButton.addEventListener('click', (e) => {
+            e.stopPropagation()
+            this.clearChatHistoryWithConfirmation()
         })
 
         const chatWindow = this.chatContainer.querySelector('.chat-window')
@@ -239,7 +239,7 @@ class DobbyChat {
     }
 
     async callFireworksAPI(prompt) {
-        const previousHistory = this.getPreviousChatHistory(5)
+        const previousHistory = this.getPreviousChatHistory(this.MAX_PREVIOUS_MESSAGES)
 
         const body = {
             model: this.model,
@@ -298,10 +298,8 @@ class DobbyChat {
     }
 
     manageChatHistoryLength() {
-        const maxHistoryLength = 30
-
-        if (this.chatHistory.length > maxHistoryLength) {
-            this.chatHistory = this.chatHistory.slice(-30)
+        if (this.chatHistory.length > this.MAX_CHAT_HISTORY_LENGTH) {
+            this.chatHistory = this.chatHistory.slice(-this.MAX_CHAT_HISTORY_LENGTH)
         }
     }
 
@@ -315,21 +313,24 @@ class DobbyChat {
                 this.manageChatHistoryLength()
 
                 this.renderStoredMessages()
+            } else {
+                this.renderStoredMessages()
             }
         } catch (error) {
             console.error('Error loading chat history from storage:', error)
             this.chatHistory = []
+            this.renderStoredMessages()
         }
     }
 
     renderStoredMessages() {
-        if (!this.chatMessages || this.chatHistory.length === 0) {
+        if (!this.chatMessages) {
             return
         }
 
-        const defaultMessage = this.chatMessages.querySelector('.bot-message')
-        if (defaultMessage && defaultMessage.textContent.includes('Hello! I\'m Dobby')) {
-            defaultMessage.remove()
+        if (this.chatHistory.length === 0) {
+            this.addWelcomeMessage()
+            return
         }
 
         this.chatHistory.forEach((msg, index) => {
@@ -362,7 +363,7 @@ class DobbyChat {
 
     saveChatHistoryToStorage() {
         try {
-            const historyToSave = this.chatHistory.slice(-30)
+            const historyToSave = this.chatHistory.slice(-this.MAX_SAVE_HISTORY_LENGTH)
             localStorage.setItem('dobby_chat_history', JSON.stringify(historyToSave))
         } catch (error) {
             console.error('Error saving chat history to storage:', error)
@@ -372,6 +373,44 @@ class DobbyChat {
     clearChatHistory() {
         this.chatHistory = []
         localStorage.removeItem('dobby_chat_history')
+        this.clearChatMessages()
+        this.renderStoredMessages()
+    }
+
+    clearChatHistoryWithConfirmation() {
+        if (confirm('Are you sure you want to clear all chat history? This action cannot be undone.')) {
+            this.clearChatHistory()
+        }
+    }
+
+    clearChatMessages() {
+        if (this.chatMessages) {
+            this.chatMessages.innerHTML = ''
+        }
+    }
+
+    addWelcomeMessage() {
+        if (this.chatMessages) {
+            const welcomeMessage = document.createElement('div')
+            welcomeMessage.className = 'message bot-message'
+            welcomeMessage.innerHTML = `
+                <div class="message-avatar">
+                    <img src="assets/logo-dobby.png" alt="Dobby">
+                </div>
+                <div class="message-content">
+                    <p>Hello! I'm Dobby, your financial assistant. I can help you with:</p>
+                    <ul>
+                        <li>Expense analysis</li>
+                        <li>Financial advice</li>
+                        <li>Expense explanations</li>
+                        <li>Budget management support</li>
+                    </ul>
+                    <p>Do you have any questions?</p>
+                </div>
+            `
+            this.chatMessages.appendChild(welcomeMessage)
+            this.scrollToBottom()
+        }
     }
 
     getSystemPromptDetectIntent() {
