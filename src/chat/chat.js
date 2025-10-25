@@ -417,8 +417,10 @@ class DobbyChat {
         return `
             You are an intelligent personal finance assistant.
             Your task is to analyze user messages and extract structured information.
-            You can use previous messages (conversation history) to understand the user's intent and maintain context during the conversation.
+            IMPORTANT: Focus primarily on the CURRENT user message. Use conversation history ONLY for context when the current message is ambiguous or refers to previous topics.
         
+            If the current message is clear and complete on its own, ignore previous conversation history.
+            
             ---
             ## Step 1. Identify user intent:
             One of:
