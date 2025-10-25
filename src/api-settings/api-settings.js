@@ -9,41 +9,62 @@ class ApiSettingsManager {
 
     initializeEventListeners() {
         // Back button
-        document.getElementById('backBtn').addEventListener('click', () => {
-            window.location.href = '../../index.html'
-        })
+        const backBtn = document.getElementById('backBtn')
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                window.location.href = '../../index.html'
+            })
+        }
 
         // Form submission
-        document.getElementById('apiForm').addEventListener('submit', (e) => {
-            e.preventDefault()
-            this.saveApiKey()
-        })
+        const apiForm = document.getElementById('apiForm')
+        if (apiForm) {
+            apiForm.addEventListener('submit', (e) => {
+                e.preventDefault()
+                this.saveApiKey()
+            })
+        }
 
         // Toggle visibility
-        document.getElementById('toggleVisibility').addEventListener('click', () => {
-            this.toggleVisibility()
-        })
+        const toggleVisibility = document.getElementById('toggleVisibility')
+        if (toggleVisibility) {
+            toggleVisibility.addEventListener('click', () => {
+                this.toggleVisibility()
+            })
+        }
 
         // Clear key
-        document.getElementById('clearKey').addEventListener('click', () => {
-            this.clearKey()
-        })
+        const clearKey = document.getElementById('clearKey')
+        if (clearKey) {
+            clearKey.addEventListener('click', () => {
+                this.clearKey()
+            })
+        }
 
         // Test connection
-        document.getElementById('testConnection').addEventListener('click', () => {
-            this.testConnection()
-        })
+        const testConnection = document.getElementById('testConnection')
+        if (testConnection) {
+            testConnection.addEventListener('click', () => {
+                this.testConnection()
+            })
+        }
 
         // Input change
-        document.getElementById('apiKey').addEventListener('input', () => {
-            this.updateStatus()
-        })
+        const apiKey = document.getElementById('apiKey')
+        if (apiKey) {
+            apiKey.addEventListener('input', () => {
+                this.updateStatus()
+            })
+        }
     }
 
     loadSavedKey() {
         if (this.apiKey) {
-            document.getElementById('apiKey').value = this.apiKey
-            this.updateStatus()
+            const apiKeyInput = document.getElementById('apiKey')
+            if (apiKeyInput) {
+                apiKeyInput.value = this.apiKey
+                this.updateStatus()
+            }
         }
     }
 
@@ -51,18 +72,23 @@ class ApiSettingsManager {
         const input = document.getElementById('apiKey')
         const button = document.getElementById('toggleVisibility')
         
-        if (input.type === 'password') {
-            input.type = 'text'
-            button.textContent = '🙈 Hide'
-        } else {
-            input.type = 'password'
-            button.textContent = '👁️ Show'
+        if (input && button) {
+            if (input.type === 'password') {
+                input.type = 'text'
+                button.textContent = '🙈 Hide'
+            } else {
+                input.type = 'password'
+                button.textContent = '👁️ Show'
+            }
         }
     }
 
     clearKey() {
         if (confirm('Are you sure you want to clear the API key?')) {
-            document.getElementById('apiKey').value = ''
+            const apiKeyInput = document.getElementById('apiKey')
+            if (apiKeyInput) {
+                apiKeyInput.value = ''
+            }
             this.apiKey = ''
             localStorage.removeItem('fireworks_api_key')
             this.updateStatus()
@@ -71,7 +97,10 @@ class ApiSettingsManager {
     }
 
     saveApiKey() {
-        const newApiKey = document.getElementById('apiKey').value.trim()
+        const apiKeyInput = document.getElementById('apiKey')
+        if (!apiKeyInput) return
+        
+        const newApiKey = apiKeyInput.value.trim()
         
         if (!newApiKey) {
             this.showErrorNotification('Please enter a valid API key')
@@ -96,7 +125,10 @@ class ApiSettingsManager {
     }
 
     async testConnection() {
-        const currentApiKey = document.getElementById('apiKey').value.trim()
+        const apiKeyInput = document.getElementById('apiKey')
+        if (!apiKeyInput) return
+        
+        const currentApiKey = apiKeyInput.value.trim()
         
         if (!currentApiKey) {
             this.showErrorNotification('Please enter an API key first')
@@ -104,6 +136,8 @@ class ApiSettingsManager {
         }
     
         const button = document.getElementById('testConnection')
+        if (!button) return
+        
         const originalText = button.textContent
         button.textContent = 'Testing...'
         button.disabled = true
@@ -144,7 +178,11 @@ class ApiSettingsManager {
     updateStatus(isConnected = null) {
         const statusDot = document.querySelector('.status-dot')
         const statusText = document.querySelector('.status-text')
-        const currentKey = document.getElementById('apiKey').value.trim()
+        const apiKeyInput = document.getElementById('apiKey')
+        
+        if (!statusDot || !statusText || !apiKeyInput) return
+        
+        const currentKey = apiKeyInput.value.trim()
 
         if (currentKey) {
             if (isConnected === true) {
@@ -165,8 +203,12 @@ class ApiSettingsManager {
 
     showSuccessNotification(message) {
         const notification = document.getElementById('successNotification')
+        if (!notification) return
+        
         const textElement = notification.querySelector('.notification-text')
-        textElement.textContent = message
+        if (textElement) {
+            textElement.textContent = message
+        }
         notification.style.display = 'block'
         
         setTimeout(() => {
@@ -187,6 +229,11 @@ class ApiSettingsManager {
 }
 
 // Initialize the API settings manager when the page loads
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        new ApiSettingsManager()
+    })
+} else {
+    // DOM is already loaded
     new ApiSettingsManager()
-})
+}
