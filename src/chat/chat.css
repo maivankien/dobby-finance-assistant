@@ -63,7 +63,7 @@
 
 /* Chat Header */
 .chat-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #e6b800 0%, #d97706 100%);
     color: white;
     padding: 15px 20px;
     display: flex;
@@ -201,7 +201,7 @@
 }
 
 .user-message .message-content {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #e6b800 0%, #d97706 100%);
     color: white;
 }
 
@@ -248,11 +248,11 @@
 }
 
 #chatInput:focus {
-    border-color: #667eea;
+    border-color: #e6b800;
 }
 
 .send-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #e6b800 0%, #d97706 100%);
     border: none;
     color: white;
     width: 40px;
@@ -294,7 +294,7 @@
 .typing-dot {
     width: 8px;
     height: 8px;
-    background: #667eea;
+    background: #e6b800;
     border-radius: 50%;
     animation: typing 1.4s infinite ease-in-out;
 }
