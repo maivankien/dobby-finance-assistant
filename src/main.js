@@ -133,12 +133,18 @@ class ExpenseManager {
             filtered = filtered.filter(expense => expense.date === today)
         } else if (timeFilter === 'week') {
             const startOfWeek = new Date(now)
-            startOfWeek.setDate(now.getDate() - now.getDay() + 1)
+            const dayOfWeek = now.getDay()
+            const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+            startOfWeek.setDate(now.getDate() - daysToSubtract)
             startOfWeek.setHours(0, 0, 0, 0)
+
+            const endOfWeek = new Date(startOfWeek)
+            endOfWeek.setDate(startOfWeek.getDate() + 6)
+            endOfWeek.setHours(23, 59, 59, 999)
 
             filtered = filtered.filter(expense => {
                 const expenseDate = new Date(expense.date)
-                return expenseDate >= startOfWeek && expenseDate <= now
+                return expenseDate >= startOfWeek && expenseDate <= endOfWeek
             })
         } else if (timeFilter === 'month') {
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
