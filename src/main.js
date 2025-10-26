@@ -36,11 +36,23 @@ class ExpenseManager {
 
         // Filter events
         document.getElementById('timeFilter').addEventListener('change', () => {
+            this.toggleDateRangeInputs()
             this.renderExpenses()
             this.updateTotal()
         })
 
         document.getElementById('categoryFilter').addEventListener('change', () => {
+            this.renderExpenses()
+            this.updateTotal()
+        })
+
+        // Date range events
+        document.getElementById('startDate').addEventListener('change', () => {
+            this.renderExpenses()
+            this.updateTotal()
+        })
+
+        document.getElementById('endDate').addEventListener('change', () => {
             this.renderExpenses()
             this.updateTotal()
         })
@@ -65,6 +77,24 @@ class ExpenseManager {
         // Set current time
         const timeString = now.toTimeString().split(' ')[0].substring(0, 5)
         timeInput.value = timeString
+    }
+
+    toggleDateRangeInputs() {
+        const timeFilter = document.getElementById('timeFilter').value
+        const dateRangeGroup = document.getElementById('dateRangeGroup')
+        
+        if (timeFilter === 'custom') {
+            dateRangeGroup.style.display = 'flex'
+            // Set default date range to current month
+            const now = new Date()
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+            
+            document.getElementById('startDate').value = startOfMonth.toISOString().split('T')[0]
+            document.getElementById('endDate').value = endOfMonth.toISOString().split('T')[0]
+        } else {
+            dateRangeGroup.style.display = 'none'
+        }
     }
 
     showPopup() {
@@ -153,6 +183,20 @@ class ExpenseManager {
                 const expenseDate = new Date(expense.date)
                 return expenseDate >= startOfMonth && expenseDate <= now
             })
+        } else if (timeFilter === 'custom') {
+            const startDate = document.getElementById('startDate').value
+            const endDate = document.getElementById('endDate').value
+            
+            if (startDate && endDate) {
+                const start = new Date(startDate)
+                const end = new Date(endDate)
+                end.setHours(23, 59, 59, 999)
+                
+                filtered = filtered.filter(expense => {
+                    const expenseDate = new Date(expense.date)
+                    return expenseDate >= start && expenseDate <= end
+                })
+            }
         }
 
         const categoryFilter = document.getElementById('categoryFilter').value

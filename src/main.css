@@ -145,6 +145,50 @@ body::before {
     border-color: #e6b800;
 }
 
+/* Date Range Group */
+.date-range-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+}
+
+.date-range-group .date-input-group {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.date-range-group .date-input-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 150px;
+}
+
+.date-range-group label {
+    font-weight: 600;
+    color: #4a5568;
+    white-space: nowrap;
+}
+
+.date-range-group input[type="date"] {
+    padding: 10px 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 1rem;
+    background: white;
+    transition: border-color 0.3s ease;
+    width: 100%;
+}
+
+.date-range-group input[type="date"]:focus {
+    outline: none;
+    border-color: #e6b800;
+}
+
 /* Summary Section */
 .summary-section {
     margin-bottom: 2rem;
@@ -480,6 +524,15 @@ body::before {
     .filter-section {
         flex-direction: column;
         gap: 1rem;
+    }
+    
+    .date-range-group .date-input-group {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .date-range-group .date-input-item {
+        min-width: auto;
     }
     
     .expense-item {
