@@ -1,3 +1,18 @@
+class APIKeyError extends Error {
+    constructor(message = 'Invalid or expired API key') {
+        super(message)
+        this.name = 'APIKeyError'
+    }
+}
+
+class APIError extends Error {
+    constructor(message, statusCode = null) {
+        super(message)
+        this.name = 'APIError'
+        this.statusCode = statusCode
+    }
+}
+
 class DobbyChat {
     constructor() {
         this.chatContainer = null
@@ -148,26 +163,35 @@ class DobbyChat {
         const message = this.chatInput.value.trim()
         if (!message || this.isTyping) return
 
-        this.chatHistory.push({
-            sender: 'user',
-            content: message,
-            timestamp: new Date().toISOString()
-        })
-
-
         this.addMessageToUI(message, 'user')
         this.chatInput.value = ''
 
         this.showTypingIndicator()
-        const aiResponse = await this.generateAIResponse(message)
+        const { response: aiResponse, intentType } = await this.generateAIResponse(message)
 
         this.addMessageToUI(aiResponse, 'bot')
 
-        this.chatHistory.push({
+        const shouldSkipAIContext = intentType === 'greeting' || intentType === 'other' || intentType === 'api_key_error' || intentType === 'api_error'
+
+        const userMessage = {
+            sender: 'user',
+            content: message,
+            timestamp: new Date().toISOString()
+        }
+
+        const botMessage = {
             sender: 'bot',
             content: aiResponse,
             timestamp: new Date().toISOString()
-        })
+        }
+
+        if (shouldSkipAIContext) {
+            userMessage.skipAIContext = true
+            botMessage.skipAIContext = true
+        }
+
+        this.chatHistory.push(userMessage)
+        this.chatHistory.push(botMessage)
 
         this.manageChatHistoryLength()
         this.saveChatHistoryToStorage()
@@ -220,7 +244,9 @@ class DobbyChat {
     }
 
     async generateAIResponse(userMessage) {
-        return await this.getAIResponse(userMessage)
+        const intent = await this.detectIntent(userMessage)
+        const response = await this.handleIntent(intent)
+        return { response, intentType: intent.intent }
     }
 
     parseJSONAIResponse(text) {
@@ -243,6 +269,10 @@ class DobbyChat {
     }
 
     async callFireworksAPI(prompt) {
+        if (!this.apiKey || this.apiKey.trim() === '') {
+            throw new APIKeyError('API key is not configured. Please set up your API key in the API Settings page.')
+        }
+
         const previousHistory = this.getPreviousChatHistory(this.MAX_PREVIOUS_MESSAGES)
 
         const body = {
@@ -260,27 +290,27 @@ class DobbyChat {
             ]
         }
 
-        try {
-            const response = await fetch(this.apiUrl, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${this.apiKey}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(body)
-            })
+        const response = await fetch(this.apiUrl, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${this.apiKey}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+        })
 
-            if (!response.ok) {
-                const errorText = await response.text()
-                throw new Error(`HTTP error! ${response.status} - ${errorText}`)
+        if (!response.ok) {
+            const errorText = await response.text()
+            
+            if (response.status === 401 || response.status === 403) {
+                throw new APIKeyError('Invalid or expired API key. Please check and update your API key in the API Settings page.')
             }
-
-            const data = await response.json()
-            return data?.choices?.[0]?.message?.content?.trim()
-        } catch (err) {
-            console.error("Error callFireworksAPI:", err);
-            return null;
+            
+            throw new APIError(`API error: ${response.status} - ${errorText}`, response.status)
         }
+
+        const data = await response.json()
+        return data?.choices?.[0]?.message?.content?.trim()
     }
 
     getRecentChatHistory(maxMessages) {
@@ -295,7 +325,9 @@ class DobbyChat {
     getPreviousChatHistory(maxMessages) {
         const previousMessages = this.chatHistory.slice(-maxMessages, -1)
 
-        return previousMessages.map(msg => ({
+        const filteredMessages = previousMessages.filter(msg => !msg.skipAIContext)
+
+        return filteredMessages.map(msg => ({
             role: msg.sender === 'user' ? 'user' : 'assistant',
             content: msg.content
         }))
@@ -550,6 +582,10 @@ class DobbyChat {
     }
 
     async getFinancialAdviceFromAI(analysisData, intentData) {
+        if (!this.apiKey || this.apiKey.trim() === '') {
+            throw new APIKeyError('API key is not configured. Please set up your API key in the API Settings page.')
+        }
+
         const spendingDataText = this.formatSpendingDataForAI(analysisData)
 
         const prompt = this.createFinancialAdvicePrompt(spendingDataText, intentData)
@@ -570,28 +606,28 @@ class DobbyChat {
             ]
         }
 
-        try {
-            const response = await fetch(this.apiUrl, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${this.apiKey}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(body)
-            })
+        const response = await fetch(this.apiUrl, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${this.apiKey}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+        })
 
-            if (!response.ok) {
-                const errorText = await response.text()
-                throw new Error(`HTTP error! ${response.status} - ${errorText}`)
+        if (!response.ok) {
+            const errorText = await response.text()
+            
+            if (response.status === 401 || response.status === 403) {
+                throw new APIKeyError('Invalid or expired API key. Please check and update your API key in the API Settings page.')
             }
-
-            const data = await response.json()
-            return data?.choices?.[0]?.message?.content?.trim() ||
-                "I'm sorry, I couldn't generate financial advice at the moment. Please try again."
-        } catch (err) {
-            console.error("Error getFinancialAdviceFromAI:", err)
-            return "I'm having trouble connecting to provide financial advice. Please check your internet connection and try again."
+            
+            throw new APIError(`API error: ${response.status} - ${errorText}`, response.status)
         }
+
+        const data = await response.json()
+        return data?.choices?.[0]?.message?.content?.trim() ||
+            "I'm sorry, I couldn't generate financial advice at the moment. Please try again."
     }
 
     formatSpendingDataForAI(analysisData) {
@@ -655,9 +691,18 @@ Please provide personalized financial advice based on the above information.`
         """${userInput}"""
         `
 
-        const response = await this.callFireworksAPI(prompt);
-        if (!response) return { intent: "other" };
-        return this.parseJSONAIResponse(response);
+        try {
+            const response = await this.callFireworksAPI(prompt)
+            if (!response) return { intent: "other" }
+            return this.parseJSONAIResponse(response)
+        } catch (error) {
+            if (error instanceof APIKeyError) {
+                return { intent: "api_key_error", error: error.message }
+            } else if (error instanceof APIError) {
+                return { intent: "api_error", error: error.message }
+            }
+            return { intent: "other" }
+        }
     }
 
 
@@ -860,6 +905,16 @@ Please provide personalized financial advice based on the above information.`
         }
     }
 
+    async handleAPIKeyError(intentData) {
+        const errorMessage = intentData?.error || 'Invalid or expired API key. Please check and update your API key in the API Settings page.'
+        return `${errorMessage}`
+    }
+
+    async handleAPIError(intentData) {
+        const errorMessage = intentData?.error || 'An error occurred when connecting to the API. Please try again later.'
+        return `Connection error: ${errorMessage}`
+    }
+
     async handleGreeting() {
         return "Hello! I'm Dobby, your financial assistant. I can help you record expenses, view statistics, and manage your budget. What do you need help with?"
     }
@@ -882,7 +937,16 @@ Please provide personalized financial advice based on the above information.`
             userQuestion: this.getLastUserMessage()
         }
 
-        return await this.getFinancialAdviceFromAI(analysisData, enhancedIntentData)
+        try {
+            return await this.getFinancialAdviceFromAI(analysisData, enhancedIntentData)
+        } catch (error) {
+            if (error instanceof APIKeyError) {
+                return error.message
+            } else if (error instanceof APIError) {
+                return `An error occurred while generating financial advice. ${error.message}`
+            }
+            return "I'm having trouble generating financial advice. Please try again."
+        }
     }
 
     getLastUserMessage() {
@@ -899,15 +963,12 @@ Please provide personalized financial advice based on the above information.`
             "expense_query_by_category": this.handleExpenseQueryByCategory,
             "financial_advice": this.handleFinancialAdvice,
             "greeting": this.handleGreeting,
+            "api_key_error": this.handleAPIKeyError,
+            "api_error": this.handleAPIError,
             "other": this.handleDefault
         }
 
         return intentMap[intentType] ? await intentMap[intentType].call(this, intentData) : await this.handleGreeting()
-    }
-
-    async getAIResponse(message) {
-        const intent = await this.detectIntent(message)
-        return await this.handleIntent(intent)
     }
 
     scrollToBottom() {
