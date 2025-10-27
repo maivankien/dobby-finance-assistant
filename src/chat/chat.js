@@ -436,12 +436,13 @@ class DobbyChat {
                 <div class="message-content">
                     <p>Hello! I'm Dobby, your financial assistant. I can help you with:</p>
                     <ul>
-                        <li>Expense analysis</li>
-                        <li>Financial advice</li>
-                        <li>Expense explanations</li>
+                        <li>Recording expenses (e.g., "Bought lunch for $5")</li>
+                        <li>Viewing expense summaries by day/week/month</li>
+                        <li>Querying expenses by category</li>
+                        <li>Providing financial advice and spending analysis</li>
                         <li>Budget management support</li>
                     </ul>
-                    <p>Do you have any questions?</p>
+                    <p>What would you like to do today?</p>
                 </div>
             `
             this.chatMessages.appendChild(welcomeMessage)
