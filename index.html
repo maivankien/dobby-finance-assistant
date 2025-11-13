@@ -24,6 +24,13 @@
     </header>
 
     <main class="main-content">
+        <section class="view-section">
+            <div class="view-switcher">
+                <button id="listViewBtn" class="view-btn active">List View</button>
+                <button id="calendarViewBtn" class="view-btn">Calendar View</button>
+            </div>
+        </section>
+
         <section class="filter-section">
             <div class="filter-group">
                 <label for="timeFilter">Time Filter:</label>
@@ -79,6 +86,33 @@
             <div id="expensesList" class="expenses-list">
                 <p class="no-expenses">No expenses recorded yet. Click "Add Expense" to get started!</p>
             </div>
+        </section>
+
+        <section id="calendarSection" class="calendar-section" style="display: none;">
+            <div class="calendar-header">
+                <div class="calendar-nav">
+                    <button id="calendarBackBtn" class="calendar-nav-btn">Back</button>
+                    <button id="calendarTodayBtn" class="calendar-nav-btn">Today</button>
+                    <button id="calendarNextBtn" class="calendar-nav-btn">Next</button>
+                </div>
+                <div class="calendar-current">
+                    <h2 id="calendarCurrentMonth">November 2025</h2>
+                </div>
+                <div class="calendar-view-options">
+                    <button class="calendar-view-btn active" id="calendarMonthViewBtn">Month</button>
+                    <button class="calendar-view-btn" id="calendarWeekViewBtn">Week</button>
+                </div>
+            </div>
+            <div class="calendar-weekdays">
+                <div class="calendar-weekday">Sun</div>
+                <div class="calendar-weekday">Mon</div>
+                <div class="calendar-weekday">Tue</div>
+                <div class="calendar-weekday">Wed</div>
+                <div class="calendar-weekday">Thu</div>
+                <div class="calendar-weekday">Fri</div>
+                <div class="calendar-weekday">Sat</div>
+            </div>
+            <div id="calendarGrid" class="calendar-grid"></div>
         </section>
     </main>
 
@@ -137,6 +171,18 @@
     <div id="doneNotification" class="done-notification">
         <img src="assets/done.png" alt="Done" class="done-icon">
         <span>Done!</span>
+    </div>
+
+    <div id="dayExpensesPopup" class="calendar-popup-overlay">
+        <div class="calendar-popup">
+            <div class="calendar-popup-header">
+                <h2 id="calendarPopupTitle">Expenses</h2>
+                <button id="closeDayPopup" class="calendar-close-btn">×</button>
+            </div>
+            <div id="calendarPopupContent" class="calendar-popup-content">
+                <p class="calendar-popup-empty">No expenses recorded for this day.</p>
+            </div>
+        </div>
     </div>
 
     <script src="src/main.js"></script>

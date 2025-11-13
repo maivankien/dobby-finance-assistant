@@ -4,7 +4,7 @@ A modern web application for personal expense tracking with AI-powered financial
 
 ## Overview
 
-Dobby Finance Assistant is a comprehensive personal finance management application that helps users track their daily expenses with an intuitive interface. The application features a popup-based expense entry system, comprehensive filtering options, real-time expense calculations, and an AI-powered chat assistant that can help with expense logging, financial analysis, and budgeting advice.
+Dobby Finance Assistant is a comprehensive personal finance management application that helps users track their daily expenses with an intuitive interface. The application features a popup-based expense entry system, comprehensive filtering options, real-time expense calculations, calendar view with month and week modes, and an AI-powered chat assistant that can help with expense logging, financial analysis, and budgeting advice.
 
 ## Features
 
@@ -12,6 +12,8 @@ Dobby Finance Assistant is a comprehensive personal finance management applicati
 - **Expense Entry**: Quick expense logging through a modal popup with date/time selection
 - **Category Management**: 13 predefined expense categories
 - **Advanced Filtering**: Filter expenses by time periods (Today, This Week, This Month, Custom Range) and categories
+- **Calendar View**: Visual calendar interface with month and week display modes
+- **View Switching**: Toggle between list view and calendar view
 - **Real-time Totals**: Automatic calculation of total expenses with visual feedback
 - **Data Persistence**: Local storage for data retention across sessions
 - **Expense History**: Complete transaction history with delete functionality
@@ -30,6 +32,7 @@ Dobby Finance Assistant is a comprehensive personal finance management applicati
 - **Modern UI**: Rounded corners, gradients, and smooth animations
 - **Visual Feedback**: "Done" notification after saving expenses
 - **Interactive Elements**: Hover effects and smooth transitions
+- **Calendar Interface**: Month and week calendar views with expense previews
 - **Minimizable Chat**: Collapsible AI assistant interface
 - **Multi-page Navigation**: Dedicated API settings page
 
@@ -66,6 +69,9 @@ The main application controller that handles:
 - Expense filtering and rendering
 - Form validation and submission
 - Custom date range filtering
+- Calendar view rendering (month and week modes)
+- UTC timezone handling for accurate date operations
+- View switching between list and calendar modes
 
 #### 2. ApiSettingsManager Class (`src/api-settings/api-settings.js`)
 Manages Fireworks AI API configuration:
@@ -86,8 +92,15 @@ AI-powered chat assistant featuring:
 - `saveExpense()`: Validates and stores new expenses
 - `getFilteredExpenses()`: Applies time and category filters including custom date ranges
 - `renderExpenses()`: Updates the expense list display
+- `renderCalendar()`: Renders calendar view (month or week mode)
+- `renderMonthCalendar()`: Displays full month calendar grid
+- `renderWeekCalendar()`: Displays weekly calendar view
+- `switchView()`: Toggles between list and calendar views
+- `switchCalendarViewMode()`: Switches between month and week calendar modes
 - `updateTotal()`: Calculates and displays total expenses
 - `showDoneNotification()`: Displays success feedback
+- `parseUTCDate()`: Parses date strings in UTC timezone
+- `parseUTCDateTime()`: Parses date and time in UTC timezone
 - `detectIntent()`: AI-powered intent recognition
 - `handleExpenseLog()`: Natural language expense recording
 - `analyzeExpenseData()`: Comprehensive spending analysis
@@ -125,14 +138,52 @@ The application supports 13 predefined categories:
 ## Filtering System
 
 ### Time Filters
-- **Today**: Shows expenses from the current day
-- **This Week**: Shows expenses from Monday of current week
-- **This Month**: Shows expenses from the first day of current month
+- **Today**: Shows expenses from the current day (UTC timezone)
+- **This Week**: Shows expenses from Monday of current week (UTC timezone)
+- **This Month**: Shows expenses from the first day of current month (UTC timezone)
 - **Custom Range**: User-defined date range with start and end date inputs
 
 ### Category Filters
 - **All Categories**: Shows all expenses regardless of category
 - **Specific Category**: Shows only expenses from selected category
+
+**Note**: Filters are only applied in List View. Calendar View displays all expenses regardless of filter settings.
+
+## Calendar View
+
+### Overview
+The calendar view provides a visual representation of expenses organized by date, making it easy to see spending patterns at a glance.
+
+### View Modes
+- **Month View**: Displays a full month calendar grid (6 weeks x 7 days) with expense previews
+- **Week View**: Displays a single week (7 days) with larger cells for better visibility
+
+### Features
+- **Expense Previews**: Each calendar day shows up to 3 expense items with truncated text
+- **Total Amount Display**: Daily expense totals shown in each calendar cell
+- **Visual Indicators**: 
+  - Highlighted current day
+  - Selected day highlighting
+  - Background color for days with expenses
+- **Date Navigation**: 
+  - Back/Next buttons to navigate months or weeks
+  - Today button to jump to current date
+- **Click to View Details**: Click any day to see full expense list in a popup
+- **UTC Timezone Support**: All dates and times are handled in UTC (+0) to ensure accuracy across timezones
+
+### Calendar Navigation
+- **Month Mode**: Back/Next buttons navigate by month
+- **Week Mode**: Back/Next buttons navigate by week
+- **Today Button**: Returns to current month/week depending on active mode
+- **View Switcher**: Toggle between Month and Week views using header buttons
+
+### Expense Display
+- Each calendar cell shows:
+  - Date number
+  - Total amount for the day
+  - Up to 3 expense previews (amount, time, category)
+  - "+X more" indicator if there are additional expenses
+- Long text is automatically truncated with ellipsis to maintain layout
 
 ## AI Chat Assistant
 
@@ -160,10 +211,13 @@ The application supports 13 predefined categories:
 
 ### Layout Features
 - **Header**: Logo, API Settings button, and Add Expense button
-- **Filter Section**: Time and category filters with custom date range support
-- **Summary Card**: Total expense display with animation effects
-- **Expense List**: Grid-based expense history with hover effects
+- **View Switcher**: Toggle between List View and Calendar View
+- **Filter Section**: Time and category filters with custom date range support (visible in List View only)
+- **Summary Card**: Total expense display with animation effects (visible in List View only)
+- **Expense List**: Grid-based expense history with hover effects (List View)
+- **Calendar Grid**: Month or week calendar with expense previews (Calendar View)
 - **Popup Modal**: Expense entry form with background logo
+- **Date Expense Popup**: Detailed expense list for selected calendar day
 - **Chat Interface**: Minimizable AI assistant with typing indicators
 
 ### Responsive Design
@@ -191,9 +245,17 @@ The application supports 13 predefined categories:
 ### Usage
 1. **Manual Expense Entry**: Click "Add Expense" to open the expense entry form
 2. **AI-Powered Entry**: Use the chat assistant to record expenses naturally
-3. **Filtering**: Use time and category filters to view specific expenses
-4. **Financial Analysis**: Ask the AI assistant for spending insights and advice
-5. **Data Management**: Delete expenses or clear chat history as needed
+3. **View Switching**: Toggle between List View and Calendar View using the view switcher buttons
+4. **Calendar Navigation**: 
+   - Use Back/Next buttons to navigate months or weeks
+   - Click Today to return to current date
+   - Switch between Month and Week views using calendar header buttons
+5. **Viewing Expenses**: 
+   - In List View: Use filters to view specific expenses
+   - In Calendar View: Click any day to see full expense details in popup
+6. **Filtering**: Use time and category filters in List View to view specific expenses
+7. **Financial Analysis**: Ask the AI assistant for spending insights and advice
+8. **Data Management**: Delete expenses or clear chat history as needed
 
 ### API Configuration
 1. Visit [fireworks.ai](https://fireworks.ai) to obtain an API key
